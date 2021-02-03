@@ -1,0 +1,842 @@
+izn:=NewPrizn;
+    Yroven:=KolSpace;
+    end;
+  CloseFile(f);
+  end;
+
+Procedure TPriznak.SaveFile(NameFile:string; Head:TPriznak);
+  var
+    CurPriznak:TPriznak;
+    l:byte;
+    f:TextFile;
+  begin
+    AssignFile(f,NameFile);
+    rewrite(f);
+    Writeln(F,Head.Priznak);
+    CurPriznak:=Head;
+    l:=0;
+    repeat
+      if CurPriznak.Child<>nil then
+        begin
+        CurPriznak:=CurPriznak.Child;
+        inc(l);
+        Writeln(f,' ':l,CurPriznak.Priznak);
+        end;
+      if (CurPriznak.Child=nil) and (CurPriznak.Brother<>nil) then
+        begin
+        CurPriznak:=CurPriznak.Brother;
+        Writeln(f,' ':l,CurPriznak.Priznak);
+        end;
+      if (CurPriznak.Child=nil) and (CurPriznak.Brother=nil) then
+        begin
+        if l<>0 then
+          repeat
+            CurPriznak:=CurPriznak.Father;
+            Dec(l);
+          until (l=0) or (CurPriznak.Brother<>nil);
+          if l<>0 then
+            begin
+            CurPriznak:=CurPriznak.Brother;
+            Writeln(f,' ':l,CurPriznak.Priznak);
+            end;
+        end;
+    Until l=0;
+    CloseFile(f);
+  end;
+
+Procedure TPriznak.Poisk(Head:TPriznak; PoiskId:Word; Priznak:String; var PoiskPriznak:TPriznak);
+  var
+    CurPriznak:TPriznak;
+    l:byte;
+  begin
+    CurPriznak:=Head;
+    l:=0;
+    if ((PoiskId<>65535) and (CurPriznak.Id=PoiskId)) or ((Priznak<>'') and (CurPriznak.Priznak=Priznak)) then
+      begin
+      PoiskPriznak:=CurPriznak;
+      Exit;
+      end;
+    repeat
+      if CurPriznak.Child<>nil then
+        begin
+        CurPriznak:=CurPriznak.Child;
+        inc(l);
+        if ((PoiskId<>65535) and (CurPriznak.Id=PoiskId)) or ((Priznak<>'') and (CurPriznak.Priznak=Priznak)) then
+          begin
+          PoiskPriznak:=CurPriznak;
+          l:=0;
+          end;
+        end;
+      if (CurPriznak.Child=nil) and (CurPriznak.Brother<>nil) then
+        begin
+        CurPriznak:=CurPriznak.Brother;
+        if ((PoiskId<>65535) and (CurPriznak.Id=PoiskId)) or ((Priznak<>'') and (CurPriznak.Priznak=Priznak)) then
+          begin
+          PoiskPriznak:=CurPriznak;
+          l:=0;
+          end;
+        end;
+      if (CurPriznak.Child=nil) and (CurPriznak.Brother=nil) then
+        begin
+        if l<>0 then
+          repeat
+            CurPriznak:=CurPriznak.Father;
+            Dec(l);
+          until (l=0) or (CurPriznak.Brother<>nil);
+          if l<>0 then
+            begin
+            CurPriznak:=CurPriznak.Brother;
+            if ((PoiskId<>65535) and (CurPriznak.Id=PoiskId)) or ((Priznak<>'') and (CurPriznak.Priznak=Priznak)) then
+              begin
+              PoiskPriznak:=CurPriznak;
+              l:=0;
+              end;
+            end;
+        end;
+    Until l=0;
+  end;
+
+Procedure TPriznak.DelPriznak(Head:TPriznak);
+  var
+    DelPriznak,CurPriznak:TPriznak;
+    l:byte;
+  begin
+    CurPriznak:=Head;
+    l:=0;
+    repeat
+      if CurPriznak.Child<>nil then
+        begin
+        CurPriznak:=CurPriznak.Child;
+        inc(l);
+        end;
+      if (CurPriznak.Child=nil) and (CurPriznak.Brother<>nil) then
+        begin
+        DelPriznak:=CurPriznak;
+        CurPriznak:=CurPriznak.Brother;
+        DelPriznak.Child:=nil;
+        DelPriznak.Brother:=nil;
+        DelPriznak.Father:=nil;
+        DelPriznak.Free;
+        end;
+      if (CurPriznak.Child=nil) and (CurPriznak.Brother=nil) then
+        begin
+        if l<>0 then
+          repeat
+            DelPriznak:=CurPriznak;
+            CurPriznak:=CurPriznak.Father;
+            DelPriznak.Child:=nil;
+            DelPriznak.Brother:=nil;
+            DelPriznak.Father:=nil;
+            DelPriznak.Free;
+            Dec(l);
+          until (l=0) or (CurPriznak.Brother<>nil);
+          if l<>0 then
+            begin
+            CurPriznak:=CurPriznak.Brother;
+            end;
+        end;
+    Until l=0;
+    Head.Child:=nil;
+    Head.Brother:=nil;
+    Head.Father:=nil;
+    head.Free;
+  end;
+
+Procedure TPriznak.Add(Prizn:string; FatherPriznak:TPriznak);
+  var
+    NewPriznak:TPriznak;
+  begin
+  NewPriznak:=TPriznak.Creat(Prizn,TekId);
+  Inc(TekId);
+  NewPriznak.Father:=FatherPriznak;
+  If FatherPriznak.Child=nil then
+    FatherPriznak.Child:=newPriznak
+  else
+    begin
+    FatherPriznak:=FatherPriznak.Child;
+    While FatherPriznak.Brother<>nil do
+      FatherPriznak:=FatherPriznak.Brother;
+    FatherPriznak.Brother:=NewPriznak;
+    end;
+  end;
+
+Procedure TPriznak.AddHead(Prizn:string);
+  var
+    NewPriznak:TPriznak;
+  begin
+  NewPriznak:=TPriznak.Creat(Prizn,TekId);
+  Inc(TekId);
+  Head:=NewPriznak;
+  end;
+
+Procedure TPriznak.VivodTree(Head:TPriznak);
+  var
+    CurPriznak:TPriznak;
+    l,i:byte;
+    st,st1:string;
+  begin
+    Form1.MeTree.Clear;
+    CurPriznak:=Head;
+    Str(CurPriznak.Id,St);
+    St:=st+' '+CurPriznak.Priznak;
+    Form1.MeTree.Lines.Add(st);
+    l:=0;
+    repeat
+      if CurPriznak.Child<>nil then
+        begin
+        CurPriznak:=CurPriznak.Child;
+        inc(l);
+        st:='';
+        for i:=1 to l do
+          St:=St+'*';
+        Str(CurPriznak.Id,St1);
+        St:=st+st1+' '+CurPriznak.Priznak;
+        Form1.MeTree.Lines.Add(st);
+        end;
+      if (CurPriznak.Child=nil) and (CurPriznak.Brother<>nil) then
+        begin
+        CurPriznak:=CurPriznak.Brother;
+        st:='';
+        for i:=1 to l do
+          St:=St+'*';
+        Str(CurPriznak.Id,St1);
+        St:=st+st1+' '+CurPriznak.Priznak;
+        Form1.MeTree.Lines.Add(st);
+        end;
+      if (CurPriznak.Child=nil) and (CurPriznak.Brother=nil) then
+        begin
+        if l<>0 then
+          repeat
+            CurPriznak:=CurPriznak.Father;
+            Dec(l);
+          until (l=0) or (CurPriznak.Brother<>nil);
+          if l<>0 then
+            begin
+            CurPriznak:=CurPriznak.Brother;
+            st:='';
+            for i:=1 to l do
+              St:=St+'*';
+            Str(CurPriznak.Id,St1);
+            St:=st+st1+' '+CurPriznak.Priznak;
+            Form1.MeTree.Lines.Add(st);
+            end;
+        end;
+    Until l=0;
+  end;
+
+Procedure TPriznak.SdvigUp(Priznak:TPriznak);
+  var
+    FatherPriznak,PredPriznak:TPriznak;
+  begin
+    FatherPriznak:=Priznak.Father;
+    if FatherPriznak=Head then
+      ShowMessage('Нельзя сдвигать к главному элементу')
+    else
+    begin
+    {Выдергивание признака}
+    If FatherPriznak.Child=Priznak then
+      FatherPriznak.Child:=Priznak.Brother
+    else
+      begin
+      PredPriznak:=FatherPriznak.Child;
+      While PredPriznak.Brother<>Priznak do
+        PredPriznak:=PredPriznak.Brother;
+      PredPriznak.Brother:=Priznak.Brother;
+      end;
+    Priznak.Brother:=nil;      
+    {Добавление элемента}
+    While FatherPriznak.Brother<>nil do
+      FatherPriznak:=FatherPriznak.Brother;
+    FatherPriznak.Brother:=Priznak;
+    Priznak.Father:=FatherPriznak.Father;
+    end;
+  end;
+
+Procedure TPriznak.SdvigDown(zamena:boolean; NewPriznak:TPriznak; Priznak:TPriznak);
+  var
+    FatherPriznak,PredPriznak:TPriznak;
+  begin
+  FatherPriznak:=Priznak.Father;
+    {Выдергивание признака}
+  If FatherPriznak.Child=Priznak then
+    FatherPriznak.Child:=Priznak.Brother
+  else
+    begin
+    PredPriznak:=FatherPriznak.Child;
+    While PredPriznak.Brother<>Priznak do
+      PredPriznak:=PredPriznak.Brother;
+    PredPriznak.Brother:=Priznak.Brother;
+    end;
+  Priznak.Brother:=nil;
+  {Добавление элемента}
+  if zamena then
+    begin
+    If NewPriznak.Child=nil then
+      NewPriznak.Child:=Priznak
+    else
+      begin
+      PredPriznak:=NewPriznak.Child;
+      While PredPriznak.Brother<>nil do
+        PredPriznak:=Predpriznak.Brother;
+      PredPriznak.Brother:=Priznak;
+      end;
+    end
+  else
+    NewPriznak.Child:=Priznak;
+  Priznak.Father:=NewPriznak;
+  end;
+
+procedure DontEnabeled;
+  begin
+  Form1.BtAdd.Enabled:=false;
+  Form1.BtDel.Enabled:=false;
+  Form1.BtSave.Enabled:=false;
+  Form1.BtLoad.Enabled:=false;
+  Form1.BtSdvigUp.Enabled:=false;
+  Form1.BtSdvigDown.Enabled:=false;
+  Form1.BtLoadList.Enabled:=false;
+  Form1.BtSaveList.Enabled:=false;
+  Form1.BtDelList.Enabled:=false;
+  Form1.BtAddList.Enabled:=false;
+  Form1.BtIzmenit.Enabled:=false;
+  Form1.BtVibor.Enabled:=False;
+  end;
+
+Procedure OnEnabled;
+  begin
+  Form1.BtAdd.Enabled:=True;
+  Form1.BtDel.Enabled:=True;
+  Form1.BtSave.Enabled:=True;
+  Form1.BtLoad.Enabled:=True;
+  Form1.BtSdvigUp.Enabled:=True;
+  Form1.BtSdvigDown.Enabled:=True;
+  Form1.BtLoadList.Enabled:=true;
+  Form1.BtSaveList.Enabled:=true;
+  Form1.BtDelList.Enabled:=true;
+  Form1.BtAddList.Enabled:=true;
+  Form1.BtIzmenit.Enabled:=True;
+  Form1.BtVibor.Enabled:=true;
+  end;
+
+Procedure DontVibor;
+  begin
+  Form1.BtPole.Visible:=false;
+  Form1.BtCancelPole.Visible:=false;
+  Form1.EdPole.Visible:=false;
+  Form1.LbPole.Visible:=false;
+  form1.EdPole.Text:='';
+  end;
+
+Procedure OnVibor(st,st1:string);
+  begin
+  Form1.BtPole.Visible:=True;
+  Form1.BtCancelPole.Visible:=True;
+  Form1.EdPole.Visible:=True;
+  Form1.LbPole.Visible:=True;
+  Form1.LbPole.Caption:=st;
+  Form1.BtPole.Caption:=st1;
+  end;
+
+Procedure DontPoleDop;
+  begin
+  Form1.EdPoleDop.Visible:=false;
+  Form1.LbPoleDop.Visible:=false;
+  form1.EdPoleDop.Text:='';
+  end;
+
+Procedure OnPoleDop(st:string);
+  begin
+  Form1.EdPoleDop.Visible:=True;
+  Form1.LbPoleDop.Visible:=True;
+  Form1.LbPoleDop.Caption:=st;
+  end;
+
+Procedure OnPoleSymma(St:String);
+  begin
+  Form1.EdPoleSymma.Visible:=true;
+  Form1.LbPoleSymma.Visible:=True;
+  Form1.LbPoleSymma.Caption:=st;
+  Form1.McData.Visible:=True;  
+  end;
+
+Procedure DontPoleSymma;
+  begin
+  Form1.EdPoleSymma.Visible:=false;
+  Form1.LbPoleSymma.Visible:=false;
+  form1.EdPoleSymma.Text:='';
+  Form1.McData.Visible:=false;
+  end;
+
+
+procedure TForm1.BtLoadClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите имя файла','Загрузить дерево');
+end;
+
+procedure TForm1.BtSaveClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите имя файла','Сохранить дерево');
+end;
+
+procedure TForm1.BtSdvigUpClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите ID признака','Сдвинуть вверх');
+end;
+
+procedure TForm1.BtSdvigDownClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите ID признака','Сдвинуть вниз');
+  OnPoleDop('Введите название признака, к которому присоединить');
+  RgTip.Visible:=true;
+end;
+
+procedure TForm1.BtDelClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите ID признака','Удалить эл дерева');
+end;
+
+procedure TForm1.BtAddClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите признак','Создать эл дерева');
+  If Head<>nil then
+  OnPoleDop('Введите  ID признака, к которому присоединить');
+end;
+
+procedure TForm1.BtCancelPoleClick(Sender: TObject);
+begin
+OnEnabled;
+DontVibor;
+DontPoleDop;
+end;
+
+Procedure Vit(DataStart,DataFinish:TDate; Priznak:String);
+  var
+  PoiskPriznak,cur:TPriznak;
+  i:word;
+
+  Procedure VivodPrizn(Prizn:String);
+    var
+      CurP:TRashodi;
+      st:string;
+    begin
+      CurP:=HeadList;
+      While CurP<>nil do
+        begin
+        if (CurP.priznak=Prizn) and (CurP.Data>=DataStart) and (CurP.Data<=DataFinish) then
+          begin
+          str(CurP.nom,st);
+          Form1.SgRash.RowCount:=i+1;
+          Form1.SgRash.Cells[0,i]:=st;
+          Form1.SgRash.Cells[1,i]:=CurP.priznak;
+          Form1.SgRash.Cells[2,i]:=FormatDateTime('dd.mm.yyyy.',CurP.Data);
+          str(CurP.symma:5:2,st);
+          Form1.SgRash.Cells[3,i]:=st;
+          Form1.SgRash.Cells[4,i]:=CurP.opisanie;
+          inc(i);
+          end;
+        CurP:=CurP.Next;
+        end;
+    end;
+  begin
+  i:=1;
+  Head.Poisk(Head,65535,Priznak,PoiskPriznak);
+  Cur:=PoiskPriznak;
+  VivodPrizn(Cur.Priznak);
+  if Cur.Child<>nil then
+    Cur:=Cur.Child
+  else
+    Exit;  
+  repeat
+    if Cur.Child<>nil then
+      begin
+      Cur:=Cur.Child;
+      end;
+    if (Cur<>PoiskPriznak) and(Cur.Child=nil) and (Cur.Brother<>nil) then
+      begin
+      VivodPrizn(Cur.Priznak);      
+      Cur:=Cur.Brother;
+      end;
+    if (Cur<>PoiskPriznak) and (Cur.Child=nil) and (Cur.Brother=nil) then
+      begin
+      If Cur<>PoiskPriznak then
+        repeat
+        VivodPrizn(Cur.Priznak);
+        Cur:=Cur.Father;
+        Until (Cur=PoiskPriznak) or (Cur.Brother<>nil);
+      If Cur<>PoiskPriznak  then
+        begin
+        VivodPrizn(Cur.Priznak);        
+        Cur:=Cur.Brother;
+        end;
+      end;
+  Until Cur=PoiskPriznak;
+  Form1.McDataDop.Visible:=false;
+  end;
+
+procedure TForm1.BtPoleClick(Sender: TObject);
+var
+  VvId:Word;
+  Prizn,Predprizn:TPriznak;
+  k:integer;
+  VvSm:real;
+begin
+  prizn:=nil;
+  Predprizn:=nil;
+  k:=0;
+  VVid:=0;
+  if BtPole.Caption='Загрузить дерево' then
+    Head.LoadTree(Form1.EdPole.Text,Head);
+  if BtPole.Caption='Сохранить дерево' then
+    Head.SaveFile(Form1.EdPole.Text,Head);
+  if BtPole.Caption='Удалить эл дерева' then
+    begin
+    Val(Form1.EdPole.Text,VvId,k);
+    if k<>0 then
+      ShowMessage('Введен не номер')
+    else
+      Head.Poisk(Head,VvId,'',Prizn);
+    if Prizn<>nil then
+      begin
+      If Prizn<>head then
+      If Prizn.Father.Child=Prizn then
+        Prizn.Father.Child:=Prizn.Brother
+      else
+        begin
+        PredPrizn:=Prizn.Father.Child;
+        While PredPrizn.Brother<>Prizn do
+          PredPrizn:=PredPrizn.Brother;
+        PredPrizn.Brother:=prizn.Brother;
+        end;
+      Head.DelPriznak(Prizn);
+      end
+    else
+      ShowMessage('Элемент с таким id не найден');
+    end;
+  if BtPole.Caption='Создать эл дерева' then
+    if Head<>nil then
+      begin
+    Val(Form1.EdPole.Text,VvId,k);
+    if k<>0 then
+      ShowMessage('Введен не номер')
+    else
+      Head.Poisk(Head,VvId,'',Prizn);
+      if Prizn<>nil then
+        Head.Add(Form1.EdPole.Text,Prizn)
+      else
+        ShowMessage('Элемент с таким id не найден');
+      end
+    else
+      Head.AddHead(Form1.EdPole.Text);
+  if BtPole.Caption='Сдвинуть вверх' then
+    begin
+    Val(Form1.EdPole.Text,VvId,k);
+    if k<>0 then
+      ShowMessage('Введен не номер')
+    else
+      Head.Poisk(Head,VvId,'',Prizn);
+    if (Prizn<>nil) and (Prizn<>head) then
+      Head.SdvigUp(Prizn)
+    else
+      ShowMessage('Элемент с таким id не найден');
+    end;
+  if BtPole.Caption='Сдвинуть вниз' then
+    begin
+    Val(Form1.EdPole.Text,VvId,k);
+    if k<>0 then
+      ShowMessage('Введен не номер')
+    else
+      Head.Poisk(Head,VvId,'',Prizn);
+    if Prizn<>nil then
+      begin
+      Case Form1.RgTip.ItemIndex of
+        0: begin
+           Head.Add(Form1.EdPoleDop.Text,Prizn.Father);
+           Head.Poisk(Prizn.Father,65535,Form1.EdPoleDop.Text,PredPrizn);
+           Head.SdvigDown(false,PredPrizn,Prizn);
+           end;
+        1: begin
+           Head.Poisk(Head,65535,Form1.EdPoleDop.Text,PredPrizn);
+           If PredPrizn<>nil then
+             Head.SdvigDown(true,Predprizn,Prizn)
+           else
+             ShowMessage('Невозможно заменить элемент с таким названием');
+           end;
+        else
+          ShowMessage('Выберите тип создания');
+        end;
+      end
+    else
+      ShowMessage('Элемент с таким id не найден');
+    RgTip.Visible:=false;
+    end;
+  if BtPole.Caption='Загрузить список' then
+    begin
+    HeadList.LoadFile(Form1.EdPole.Text);
+    end;
+  if BtPole.Caption='Сохранить список' then
+    begin
+    HeadList.SaveFile(Form1.EdPole.Text);
+    end;
+  if BtPole.Caption='Удалить эл списка' then
+    begin
+    Val(Form1.EdPole.Text,VvId,k);
+    if k<>0 then
+      ShowMessage('Введен не номер')
+    else
+      HeadList.Poisk(Vvid,PoiskList);
+    if PoiskList<>nil then
+      HeadList.Del(VvId)
+    else
+      ShowMessage('Расхода с таким номером не обнаружено');
+    end;
+  if BtPole.Caption='Добавить эл списка' then
+    begin
+     Val(Form1.EdPole.Text,VvSm,k);
+    if k<>0 then
+      ShowMessage('Введена не Сумма')
+    else
+      HeadList.Add(Form1.EdPole.Text,VvSm,Form1.McData.Date,Form1.EdPoleDop.Text);
+    end;
+  if BtPole.Caption='Изменить эл списка' then
+    begin
+    PoiskList.priznak:=Form1.EdPole.Text;
+    PoiskList.opisanie:=Form1.EdPoleDop.Text;
+    Val(Form1.EdPole.Text,PoiskList.symma,k);
+    if k<>0 then
+      ShowMessage('Введена не Сумма')
+    else
+    PoiskList.Data:=Form1.McData.Date;
+    BtPole.Caption:='';
+    end;
+  if BtPole.Caption='Найти эл списка' then
+    begin
+    HeadList.Poisk(StrToInt(Form1.EdPole.Text),PoiskList);
+    if PoiskList<>nil then
+      begin
+      DontEnabeled;
+      OnVibor('Введите признак','Изменить эл списка');
+      OnPoleDop('Введите Описание');
+      OnPoleSymma('Введите Сумму');
+      Form1.EdPole.Text:=PoiskList.priznak;
+      Form1.EdPoleDop.Text:=PoiskList.opisanie;
+      Form1.EdPoleSymma.Text:=FloatToStr(PoiskList.symma);
+      Form1.McData.Date:=PoiskList.Data;
+      end
+    else
+      ShowMessage('Расхода с таким номером не обнаружено');
+    end;
+  If Head<>nil then
+    Head.VivodTree(Head);
+  If HeadList<>nil then
+    HeadList.Vivod(HeadList);
+  If BtPole.Caption='Вычеслить' then
+    begin
+    Vit(Form1.McDataDop.Date,Form1.McData.Date,Form1.EdPole.Text);
+    end;
+if BtPole.Caption<> 'Изменить эл списка' then
+  begin
+  OnEnabled;
+  DontVibor;
+  DontPoleDop;
+  DontPoleSymma;
+  end;
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+Head:=nil;
+HeadList:=Nil;
+TekId:=0;
+TekNom:=0;
+Form1.SgRash.Cells[0,0]:='№';
+Form1.SgRash.ColWidths[0]:=20;
+Form1.SgRash.Cells[1,0]:='Признак';
+Form1.SgRash.ColWidths[1]:=100;
+Form1.SgRash.Cells[2,0]:='Дата';
+Form1.SgRash.ColWidths[2]:=100;
+Form1.SgRash.Cells[3,0]:='Сумма';
+Form1.SgRash.ColWidths[3]:=80;
+Form1.SgRash.Cells[4,0]:='Описание';
+Form1.SgRash.ColWidths[4]:=300;
+end;
+
+Constructor TRashodi.Creat(NPriz:string; Sym:Real; NData:TDate; opis:String);
+  begin
+  Next:=nil;
+  Nom:=TekNom;
+  inc(TekNom);
+  Priznak:=NPriz;
+  Symma:=Sym;
+  Data:=NData;
+  Opisanie:=Opis;
+  end;
+
+Procedure TRashodi.Add(NPriz:string; Sym:Real; NData:TDate; opis:String);
+  var
+  NewList,CurList:TRashodi;
+  begin
+  NewList:=TRashodi.Creat(NPriz,Sym,NData,opis);
+  If HeadList=nil then
+    HeadList:=NewList
+  else
+    begin
+    CurList:=HeadList;
+    While CurList.Next<>nil do
+      CurList:=CurList.Next;
+    CurList.Next:=NewList;
+    end;
+  end;
+
+Procedure TRashodi.Del(Nom:word);
+  var
+    CurList,DelList:TRashodi;
+  begin
+  CurList:=nil;
+  DelList:=HeadList;
+  While DelList.nom<>nom do
+    begin
+    CurList:=DelList;
+    DelList:=DelList.Next;
+    end;
+  If CurList=nil then
+    HeadList:=DelList.Next
+  else
+    CurList.Next:=DelList.Next;
+  DelList.Next:=nil;
+  delList.Free;
+  end;
+
+Procedure TRashodi.Poisk(Nom:Word; var Poisk:TRashodi);
+  begin
+  Poisk:=HeadList;
+  While (Poisk<>nil) and(Poisk.nom<>nom) do
+    Poisk:=Poisk.Next;
+  end;
+
+Procedure Trashodi.Vivod(Head:TRashodi);
+  var
+    CurRash:TRashodi;
+    st:string;
+    i:byte;
+  begin
+    CurRash:=Head;
+    i:=1;
+    Form1.SgRash.RowCount:=1;
+    While CurRash<>nil do
+      begin
+      str(CurRash.nom,st);
+      Form1.SgRash.RowCount:=i+1;
+      Form1.SgRash.Cells[0,i]:=st;
+      Form1.SgRash.Cells[1,i]:=CurRash.priznak;
+      Form1.SgRash.Cells[2,i]:=FormatDateTime('dd.mm.yyyy.',CurRash.Data);
+      str(CurRash.symma:5:2,st);
+      Form1.SgRash.Cells[3,i]:=st;
+      Form1.SgRash.Cells[4,i]:=CurRash.opisanie;
+      inc(i);
+      CurRash:=CurRash.Next;
+      end;
+  end;
+
+procedure TForm1.BtLoadListClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите имя файла','Загрузить список');
+end;
+
+procedure TForm1.BtSaveListClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите имя файла','Сохранить список');
+end;
+
+procedure TForm1.BtDelListClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите номер','Удалить эл списка');
+end;
+
+procedure TForm1.BtAddListClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите признак','Добавить эл списка');
+  OnPoleDop('Введите Описание');
+  OnPoleSymma('Введите Сумму');
+end;
+
+procedure TForm1.BtIzmenitClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите номер','Найти эл списка');
+end;
+
+Procedure TRashodi.SaveFile(NameFile:String);
+  var
+    F:Textfile;
+    St,St1:String;
+    CurList:TRashodi;
+  begin
+  AssignFile(f,NameFile);
+  Rewrite(F);
+  CurList:=HeadList;
+  While Curlist<>nil do
+    begin
+    Str(CurList.symma:5:2,st);
+    Str(CurList.Data:6:0,st1);
+    St:=st+'*'+St1+'*'+CurList.priznak+'*'+Curlist.opisanie;
+    Writeln(F,st);
+    CurList:=CUrList.Next;
+    end;
+  CloseFile(F);
+  end;
+
+Procedure TRashodi.LoadFile(NameFile:String);
+  Var
+  CurList,NewList:TRashodi;
+  F:TextFile;
+  St,St1:String;
+  Symma:Real;
+  Data:TDate;
+  Opisanie,Priznak:string;
+  k:integer;
+  begin
+  AssignFile(F,NameFile);
+  reset(f);
+  Curlist:=nil;
+  While Not Eof(F) do
+    begin
+    Readln(F,st);
+    St1:=Copy(st,1,Pos('*',st)-1);
+    Delete(St,1,Pos('*',st));
+    Val(St1,Symma,k);
+    St1:=Copy(st,1,Pos('*',st)-1);
+    Delete(St,1,Pos('*',st));
+    Val(St1,Data,k);
+    Priznak:=Copy(st,1,Pos('*',st)-1);
+    Delete(St,1,Pos('*',st));
+    Opisanie:=St;
+    NewList:=TRashodi.Creat(Priznak,Symma,Data,Opisanie);
+    If CurList=nil then
+      headList:=NewList
+    else
+      CurList.Next:=NewList;
+    CurList:=NewList;
+    end;
+  CloseFile(f);
+  end;
+
+procedure TForm1.BtViborClick(Sender: TObject);
+begin
+  DontEnabeled;
+  OnVibor('Введите признак','Вычеслить');
+  Form1.McData.Visible:=true;
+  Form1.McDataDop.Visible:=true;
+end;
+
+end.
+                                                                                                           enting open programs, such as IrfanView. If you  minimize  a program, you remove it from the screen, but leave it active. Only its button sh

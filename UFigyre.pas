@@ -1,0 +1,123 @@
+unit UFigyre;
+
+interface
+
+uses
+   Windows,
+   Graphics;  {для TRect}
+
+type
+
+  TFigyra = class
+    tip: char;
+    x,y:byte;
+    prenadl:byte;
+    nalitie:boolean;
+    procedure Ystanovit(NewX,NewY:byte);
+    Procedure Delete;
+    procedure Draw(Rect:TRect; canvas:TCanvas);
+    Constructor Create(NewTip:Char; NewPrenadl:byte);
+    end;
+
+  THod = class
+         Private
+           x,y:byte;   {Координаты хода}
+           Figyra:TFigyra; {Нападение на фигуру}
+           Napad:byte; {ход/атака}
+         Public
+           Kach:integer;
+           next:THod;  {Следующий ход}
+           Tip:Char;
+         Constructor Create; {Создать ход}
+         Procedure YstanovitHod(NewX,NewY,NewNapad:byte; NewFigyra:TFigyra; NewTip:Char); {Установить значение хода}
+         Procedure SchitatHod(var HodX,HodY,NewNapad:Byte; var NewFigyra:TFigyra);   {Считать значение хода}
+         End;
+
+var
+  HeadHod,
+  TopHod,
+  CurrentHod:THod;
+
+implementation
+
+Constructor THod.Create;
+  begin
+  Next:=nil;
+  end;
+
+Procedure THod.YstanovitHod(NewX,NewY,NewNapad:byte; NewFigyra:TFigyra; NewTip:Char);
+  begin
+  Tip:=NewTip;
+  x:=NewX;
+  Y:=NewY;
+  Figyra:=NewFigyra;
+  Napad:=NewNapad;
+  end;
+
+Procedure THod.SchitatHod(var HodX,HodY,NewNapad:Byte; var NewFigyra:TFigyra);
+  begin
+  HodX:=X;
+  HodY:=Y;
+  NewFigyra:=Figyra;
+  NewNapad:=Napad;
+  end;
+
+procedure TFigyra.Ystanovit(NewX,NewY:byte);
+  begin
+  x:=NewX;
+  Y:=NewY;
+  end;
+
+Procedure TFigyra.Delete;
+  begin
+  x:=0;
+  y:=0;
+  Nalitie:=false;
+  end;
+
+Constructor TFigyra.Create(NewTip:Char; NewPrenadl:byte);
+  begin
+  Tip:=NewTip;
+  x:=0;
+  y:=0;
+  prenadl:=NewPrenadl;
+  nalitie:=true;
+  end;
+
+procedure TFigyra.Draw(Rect:TRect; canvas:TCanvas);
+  begin
+  Canvas.Pen.Color:=ClBlack;
+  Canvas.Font.Color:=ClRed;
+  Case prenadl of
+    1:Canvas.Brush.Color:=ClWhite;
+    2:Canvas.Brush.Color:=ClBlack;
+    end;
+  Case tip of
+    'p':begin
+        Canvas.Ellipse(Rect.Left+1,Rect.Top+1,Rect.Right-1,Rect.Bottom-1);
+        Canvas.TextOut(Rect.Left,Rect.Top+(Rect.Bottom-Rect.Top) div 2,'Пешка');
+        end;
+    'l':begin
+        Canvas.Ellipse(Rect.Left+1,Rect.Top+1,Rect.Right-1,Rect.Bottom-1);
+        Canvas.TextOut(Rect.Left,Rect.Top+(Rect.Bottom-Rect.Top) div 2,'Ладья');
+        end;
+    'k':begin
+        Canvas.Ellipse(Rect.Left+1,Rect.Top+1,Rect.Right-1,Rect.Bottom-1);
+        Canvas.TextOut(Rect.Left,Rect.Top+(Rect.Bottom-Rect.Top) div 2,'Конь');
+        end;
+    's':begin
+        Canvas.Ellipse(Rect.Left+1,Rect.Top+1,Rect.Right-1,Rect.Bottom-1);
+        Canvas.TextOut(Rect.Left,Rect.Top+(Rect.Bottom-Rect.Top) div 2,'Слон');
+        end;
+    'f':begin
+        Canvas.Ellipse(Rect.Left+1,Rect.Top+1,Rect.Right-1,Rect.Bottom-1);
+        Canvas.TextOut(Rect.Left,Rect.Top+(Rect.Bottom-Rect.Top) div 2,'Ферзь');
+        end;
+    'q':begin
+        Canvas.Ellipse(Rect.Left+1,Rect.Top+1,Rect.Right-1,Rect.Bottom-1);
+        Canvas.TextOut(Rect.Left,Rect.Top+(Rect.Bottom-Rect.Top) div 2,'Король');
+        end;
+     end;
+  end;
+
+end.

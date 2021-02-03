@@ -1,0 +1,18 @@
+program Chess1;
+
+uses
+  Forms,
+  Forma in 'Forma.pas' {Form1},
+  UFigyre in 'UFigyre.pas',
+  UDoska in 'UDoska.pas',
+  UFigyraNew in 'UFigyraNew.pas' {FFigyra},
+  UIntel1 in 'UIntel1.pas';
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TFFigyra, FFigyra);
+  Application.Run;
+end.

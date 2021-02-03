@@ -1,0 +1,24 @@
+unit Figyre;
+
+interface
+
+  TFigyra = class
+    tip: char;
+    x,y:byte;
+    prenadl:byte;
+    nalitie:boolean;
+    function Ystanovit(x,y:byte):TFigyra;
+    end;
+
+implementation
+
+
+function TFigyra.Ystanovit(x,y:byte):TFigyra;
+  begin
+
+  end;
+
+
+
+end.
+ 
